@@ -281,7 +281,7 @@ int main(int argc, char *argv[]) {
         perror ("bind");
         exit(1);    
     }
-    while ( getchar() != '\n');
+    /*while ( getchar() != '\n');*/
     memset(msg,'\0',131);
     for(;;){
         fflush(stdout);
