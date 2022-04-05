@@ -43,6 +43,7 @@ If any message is sent to the listened host, the program will retrieve the versi
 >In case the program found a out of range locNum corresponding the port, it will inidicate to the user and continue (the drone will still be OOR). 
 
 ||**Message Types**
+
 If the local host received a message, it will first check its version number. The current version is 4, but the program support all previous versions.
 
 Then the program will check if the message is a MOV message type. If so, it will then check if this message is for local host. If not, this message will be notified to the console and then ignored. Otherwise, the program will change its location base on the content stored in message body. **A MOV command will be executed regardless the distance from the command source host**
@@ -52,6 +53,7 @@ If the message is a MSG type, if the message is not for local host, it will be f
 If the message is an ACK type, if the message is not for local host, it will be forwarded to all host except the ones on the route. Otherwise, it is an reply to a message previously sent by local host. In this case, this message will not be presented fully, but instead acknowledge the use by present to the console in format "Message ID [MSG ID] to Port [Targetted port] was confirmed received"
 
 ||**additional info about message ID**
+
 A message ID is coordinated by a sender,receiver Pair (it will be described as "local ID" in following texts). All valide remote host will have an attribute called message ID. It will be initialized as 0, meaning no communication ever happened between local host, and this specific remote host. ID will start at 1. In order to not show duplicate message on screen, Local host as receiver will only the message with Incomming ID larger than local ID will be shown on the screen. Local host as sender will only update an local ID upon received an ACK.
 
 Example1: Remote host A initiated a first transmission, it will have an message ID as 1. For local host, since it has never communicate with A before, will have a local msgID as 0. Upon receive that message, the local MsgID will be update to 1 and replied with an ACK with ID 1. All remaining duplicated message forwarded to local host will still have an ID of 1. These message will all be ignored.
