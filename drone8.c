@@ -36,6 +36,7 @@ int sendMsgV2(char *buffer, int newSocket, struct sockaddr_in serverAddress, cha
 int findRemotePortID(int portNum);
 
 void updateSeqID (int portNum, int newID);
+int sendMsgV2NoRoute(char *buffer, int newSocket, struct sockaddr_in serverAddress, char* recvdPort, char* Route);
 
 struct remoteHost{/*linked list of valid remote host in conifg.txt*/
     struct sockaddr_in serverAddr;
@@ -274,7 +275,7 @@ int main(int argc, char *argv[]) {
     /*bind socket with address*/
     returnCode = bind(newSocket, (struct sockaddr *) & serverAddress,sizeof(serverAddress));
 
-    printf("Listening port at %s, current location at %s(x = %d, y = %d) on a %d by %d matrix.\n", argv[1], currentLoc, (currentLocDigit-1)%matrixColumn +1,(currentLocDigit-1)/matrixColumn+1 ,matrixColumn, matrixRow);
+    printf("Listening port at %s, current location at %s(x = %d, y = %d) on a %d by %d matrix.\n", argv[1], currentLoc, (currentLocDigit-1)%matrixColumn +1,(currentLocDigit-1)/matrixColumn+1, matrixRow, matrixColumn);
     
 
     if (returnCode<0){/*check return code for binding process*/
@@ -315,8 +316,7 @@ int main(int argc, char *argv[]) {
                             outletMsgSeq = findRemotePortID(portNum);
                             if(outletMsgSeq != -1){
                                 sprintf(buffer, "%c %s %d %s %c MSG %d %s %s", currentVersion,currentLoc, portNum, argv[1],HOPCOUNT, outletMsgSeq +1 ,argv[1],msg);/*msg into buffer*/
-                                /*Current ouput <v> <loc> <to> <from> <hopcount> <msg>*/
-                                /*Protocol change to <v> <loc> <to> <from> <hopcount> <msg_type> <msg_id> <route> <msg>*/
+                                /*Current Protocol <v> <loc> <to> <from> <hopcount> <msg_type> <msg_id> <route> <msg>*/
 
                                 /*call helper to send message*/
                                 sendMsg(buffer, newSocket, serverAddress);
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
                             memset(buffer,'\0',227);
                             sprintf(buffer, "%s %d %s %s %d %s %d %s,%s %s", recversion,currentLocDigit, portNumStr, recvSourcePort,recvHopCount, remoteMSGType, remoteMsgID, argv[1],remoteRoute,recvMsg);/*msg into buffer*/
                             /*<v> <loc> <to> <from> <hopcount> <msg_type> <msg_id> <route> <msg>*/
-                            sendMsgV2(buffer, newSocket, serverAddress,recvSourcePort);
+                            sendMsgV2NoRoute(buffer, newSocket, serverAddress,recvSourcePort, remoteRoute);
                             printf("forwarded a V3 Message\n");
                         }
                     }else{
@@ -393,7 +393,7 @@ int main(int argc, char *argv[]) {
                             
                             if(!strcmp(remoteMSGType, "MSG")){/*IF message is MSG type, do ACK*/
                             
-                                sprintf(buffer, "%c %d %s %s %d %s %d %s %s", currentVersion, currentLocDigit, recvSourcePort, argv[1],HOPCOUNT, "ACK", findRemotePortID(atoi(recvSourcePort)), argv[1] ,"==ACK MSG==");/*msg into buffer*/
+                                sprintf(buffer, "%c %d %s %s %d %s %d %s %s", currentVersion, currentLocDigit, recvSourcePort, argv[1],HOPCOUNT - '0', "ACK", findRemotePortID(atoi(recvSourcePort)), argv[1] ,"==ACK MSG==");/*msg into buffer*/
                                 printf("IN RANGE Received %d bytes from %s:%s, version %s, upsteam loc %d: '%s'\n",returnCode, inet_ntoa(clientAddress.sin_addr), portNumStr,recversion, recvLocDigit, recvMsg);
                                 printf("Confirmation ACK sent to %s.\n", recvSourcePort);
                                 sendMsgNoPrint(buffer, newSocket, serverAddress);
@@ -406,6 +406,8 @@ int main(int argc, char *argv[]) {
 
                         
                     }
+                }else{
+                    printf("Out of range message from %d ignored.\n", recvLocDigit);
                 }
             }else{
                 printf("Unknown version number %c\n", buffer[0]);
@@ -503,6 +505,47 @@ int sendMsgV2(char *buffer, int newSocket, struct sockaddr_in serverAddress, cha
             
             printf("sent %d bytes (%s) to %s:%d at location '%d'\n", returnCode, buffer, inet_ntoa(currentHost->serverAddr.sin_addr), ntohs(currentHost->serverAddr.sin_port),currentHost->loc);
             
+        }
+        currentHost = currentHost->nextHost;/*update pointer*/
+    }
+    return (0);
+}
+
+int sendMsgV2NoRoute(char *buffer, int newSocket, struct sockaddr_in serverAddress, char* recvdPort, char* remoteRoute){
+    int Route[5];
+    char fullRoute[25];
+    int returnCode;
+    int i = 0;
+    int j = 0;
+    int isPath;
+    char * thisPort;
+    strcpy(fullRoute, remoteRoute);
+    printf("finished copy\n");
+    thisPort = strtok(fullRoute, ",");
+
+    for (i = 0; thisPort!=NULL; i ++){
+        Route[i] = atoi(thisPort);
+        thisPort = strtok(NULL, ",");
+        printf("%d\n", Route[i]);
+    }
+    currentHost = head;
+    
+    while (currentHost != NULL){/*loop until a NULL node is found*/
+        isPath = 0;
+        /*setup return code*/
+        returnCode = 0;
+        if(ntohs(currentHost->serverAddr.sin_port) != atoi(recvdPort) ){
+            for(j = 0; j < i && !isPath; j ++){
+                if (currentHost->remotePort == Route[j]){
+                    isPath =1;
+                }
+            }
+            /*send msg*/
+            if(!isPath){
+                returnCode = sendto(newSocket, buffer, strlen(buffer), 0, (struct sockaddr *)&(currentHost->serverAddr), sizeof(serverAddress));
+            
+                printf("sent %d bytes (%s) to %s:%d at location '%d'\n", returnCode, buffer, inet_ntoa(currentHost->serverAddr.sin_addr), ntohs(currentHost->serverAddr.sin_port),currentHost->loc);
+            }
         }
         currentHost = currentHost->nextHost;/*update pointer*/
     }
