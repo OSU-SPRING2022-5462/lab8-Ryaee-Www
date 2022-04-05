@@ -12,9 +12,9 @@ About Config file: The **First Line** contains >[Row Number] [Column Number]. Al
 
 ## Run the program:
   
->[Make all (or make server4)] 
+>[Make all (or make drone8)] 
 >
->[server4] [port number]
+>[drone8] [port number]
 
 ||**Upon program run**
 
