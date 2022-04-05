@@ -375,7 +375,7 @@ int main(int argc, char *argv[]) {
                         printf("Instructed to mov to location at %d\n", currentLocDigit);
                     }else{
                         /*Should update this mov in record*/
-                        printf("Overheard instruction to %s to move to loc at %s", portNumStr, recvMsg);
+                        printf("Overheard instruction to %s to move to loc at %s\n", portNumStr, recvMsg);
                     }
                 }else if(!checkOutOfRange(recvLocDigit, currentLocDigit)){/*if within range*/
                     if(strcmp(portNumStr,argv[1])){/*if message not to local host, proceed forward*/
