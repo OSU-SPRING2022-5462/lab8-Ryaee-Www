@@ -520,13 +520,11 @@ int sendMsgV2NoRoute(char *buffer, int newSocket, struct sockaddr_in serverAddre
     int isPath;
     char * thisPort;
     strcpy(fullRoute, remoteRoute);
-    printf("finished copy\n");
     thisPort = strtok(fullRoute, ",");
 
     for (i = 0; thisPort!=NULL; i ++){
         Route[i] = atoi(thisPort);
         thisPort = strtok(NULL, ",");
-        printf("%d\n", Route[i]);
     }
     currentHost = head;
     
