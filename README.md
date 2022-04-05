@@ -56,5 +56,7 @@ A message ID is coordinated by a sender,receiver Pair (it will be described as "
 
 Example1: Remote host A initiated a first transmission, it will have an message ID as 1. For local host, since it has never communicate with A before, will have a local msgID as 0. Upon receive that message, the local MsgID will be update to 1 and replied with an ACK with ID 1. All remaining duplicated message forwarded to local host will still have an ID of 1. These message will all be ignored.
 
-Example2: Local host initiate a first transmission to remote host A. Local ID is 0, but a message with ID 1 will be sent. A received a message with ID 1, its local ID will be updated to 1 from 0. Then A will reply with an ACK with ID 1. Local host then receive an ACK from A with ID 1, its local ID will update from 0 to 1. **If as a sender, local host never received an ACK, the sequence ID will never be updated. The second attempt to transmit to the same remote host will still have an ID of 1**
+Example2: Local host initiate a first transmission to remote host A. Local ID is 0, but a message with ID 1 will be sent. A received a message with ID 1, its local ID will be updated to 1 from 0. Then A will reply with an ACK with ID 1. Local host then receive an ACK from A with ID 1, its local ID will update from 0 to 1. 
+
+>If as a sender, local host never received an ACK, the sequence ID will never be updated. The second attempt to transmit to the same remote host will still have an ID of 1
 
